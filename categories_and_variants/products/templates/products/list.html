@@ -1,0 +1,21 @@
+{% extends 'index.html' %}
+{% block content %}
+    {% for product in products_list %}
+        <label for="">{{product.name.label}}</label><p>{{ product.name }}</p>
+        <p>{{ product.description }}</p>
+        {% if product.product.all %}
+            {% for category_variant in product.product.all %}
+                <p>{{ category_variant.name}}</p>
+                {% if product.product.all %}
+                    {% for variant in category_variant.variant_category.all %}
+                        <p>{{ variant.name}}</p>
+                        {% if variant.image %}
+                            <img src="{{ variant.image.url }}">
+                        {% endif %}
+                    {% endfor %}
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+        <p>---------------------------------------------------------------------------</p>
+    {% endfor %}
+{% endblock content %}

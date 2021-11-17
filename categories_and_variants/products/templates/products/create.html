@@ -1,0 +1,101 @@
+{% extends 'index.html' %}
+{% block content %}
+    <form action="" method='POST' enctype="multipart/form-data" novalidate>
+    {% csrf_token %}
+
+        <h1>Product</h1>
+        {{product_form.as_p}}
+        
+        {{ variant_categories_formset.management_form }}
+        {{ variant_categories_formset.non_form_errors }}
+
+        <div id="variant-categories-form">
+        {% for variant_form in variant_categories_formset.forms %}
+            <div class="variant-category-form">
+                {% for hidden_field in variant_form.hidden_fields %}
+                    {{ hidden_field }}
+                {% endfor %}
+                <h4>Categoria</h4>
+                    <label for="">{{ variant_form.name.label }}</label>{{ variant_form.name }}
+                    <label for="{{ variant_form.DELETE.auto_id }}">{{ variant_form.DELETE.label }}</label>{{ variant_form.DELETE }}
+                {% comment %} {{variant_form}} {% endcomment %}
+                {% if variant_form.nested %}
+                    {{ variant_form.nested.management_form }}
+                    {{ variant_form.nested.non_form_errors }}
+                    <h4>Variants</h4>
+                    <div id="variants-form-{{ forloop.counter }}" class="variants-form-{{ forloop.counter}}">
+                    {% for nested_form in variant_form.nested.forms %}
+                        {% for hidden_field in nested_form.hidden_fields %}
+                            {{ hidden_field }}
+                        {% endfor %}
+                        <div class="variant-form">
+                            <label for="">{{ nested_form.name.label }}</label>{{ nested_form.name }}
+                            <label for="">{{ nested_form.image.label }}</label>{{ nested_form.image }}
+                            <label for="{{ nested_form.DELETE.auto_id }}">{{ nested_form.DELETE.label }}</label>{{ nested_form.DELETE }}
+                        </div>
+                    {% endfor %}
+                    </div>
+                    <br>
+                    <button type="button" onclick="addVariant('{{ forloop.counter}}')">Agregar variante</button>
+                    <br>
+                    <br>
+                    <br>
+                {% endif %}
+            </div>
+        {% endfor %}
+        </div>
+
+        <br>
+        <br>
+        <div class="add_category">
+            <button type="button" onclick="addCategory('{{ forloop.counter}}')">Agregar Categoria</button>
+        </div>
+
+        <br>
+        <br>
+        <button type="submit">Enviar</button>
+    </form>
+
+{% endblock content %}
+
+{% block customjs %}
+    <script src="{{STATIC_URL}}js/products.js"></script>
+    <script>
+        function addVariant(index){
+
+            formCopyTarget=document.getElementById(`variants-form-${index}`)
+            const copyEmptyFormEl = document.getElementById("variant-empty-form").cloneNode(true)
+            copyEmptyFormEl.setAttribute('class','variant-form')
+            copyEmptyFormEl.setAttribute('id','')
+
+            const current = formCopyTarget.getElementsByClassName(`variant-form`)
+            const currentVariantsFormsCount = current.length +1
+            
+            const regex = RegExp('__prefix__','g')
+            
+            let totalForms = document.getElementById(`id_variants-product-${index-1}-variant_category-TOTAL_FORMS`)
+            if (totalForms != null){
+                totalForms.setAttribute('value', currentVariantsFormsCount)
+            }
+            copyEmptyFormEl.innerHTML = copyEmptyFormEl.innerHTML.replace(regex, currentVariantsFormsCount-1)
+            formCopyTarget.append(copyEmptyFormEl)
+        }
+        
+        function addCategory(index){
+
+            let formNum = document.getElementsByClassName('variant-category-form').length
+            let variantsForm = document.getElementsByClassName('variant-category-form')[formNum-1]
+            let totalForms = document.getElementById("id_product-TOTAL_FORMS")
+            let newForm = variantsForm.cloneNode(true)
+            let formRegex = RegExp(`product-(\\d){1}-`,'g')
+            let formRegex2 = RegExp(`('(\\d){1}')`,'g')
+            let formRegex3 = RegExp(`variants-form-(\\d){1}`,'g')
+            newForm.innerHTML = newForm.innerHTML.replace(formRegex, `product-${formNum}-`)
+            newForm.innerHTML = newForm.innerHTML.replace(formRegex2, `'${formNum+1}'`)
+            newForm.innerHTML = newForm.innerHTML.replace(formRegex3, `variants-form-${formNum+1}`)
+            totalForms.setAttribute('value', formNum+1)
+            document.getElementById("variant-categories-form").append(newForm)
+            
+        }
+    </script>
+{% endblock customjs %}
